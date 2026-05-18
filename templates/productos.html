@@ -135,6 +135,12 @@
     <h1>Gestión de Productos</h1>
     <p class="subtitle">Agregá aquí los productos nuevos que no están en la programación. Se aplican antes que los mapeos fijos.</p>
 
+    {% if exito %}
+      <div class="alert">{{ exito }}</div>
+    {% endif %}
+    {% if error %}
+      <div class="alert error">{{ error }}</div>
+    {% endif %}
     {% with messages = get_flashed_messages() %}
       {% if messages %}
         {% for msg in messages %}

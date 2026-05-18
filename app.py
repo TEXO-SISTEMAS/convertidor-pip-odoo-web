@@ -223,11 +223,10 @@ def agregar_producto():
     valor_match = request.form.get("valor_match", "").strip().upper()
     codigo_odoo = request.form.get("codigo_odoo", "").strip()
     nombre_odoo = request.form.get("nombre_odoo", "").strip()
-    origen = request.form.get("origen", "productos")  # para saber a dónde redirigir
 
     if not valor_match or not codigo_odoo or not nombre_odoo:
-        flash("Todos los campos son obligatorios.")
-        return redirect(url_for(origen) if origen == "productos" else url_for("index"))
+        mappings = _leer_mappings()
+        return render_template("productos.html", mappings=mappings, error="Todos los campos son obligatorios.")
 
     mappings = _leer_mappings()
     mappings.append({
@@ -238,10 +237,9 @@ def agregar_producto():
         "nombre_odoo": nombre_odoo,
     })
     _guardar_mappings(mappings)
-    flash(f"Producto '{nombre_odoo}' agregado correctamente.")
 
-    destino = url_for("productos") if origen == "productos" else url_for("index")
-    return redirect(destino)
+    # Renderizar directamente sin redirect para evitar problemas con free tier
+    return render_template("productos.html", mappings=mappings, exito=f"Producto '{nombre_odoo}' agregado correctamente.")
 
 
 @app.route("/productos/eliminar/<mapping_id>", methods=["POST"])
@@ -249,8 +247,7 @@ def eliminar_producto(mapping_id):
     mappings = _leer_mappings()
     mappings = [m for m in mappings if m.get("id") != mapping_id]
     _guardar_mappings(mappings)
-    flash("Producto eliminado.")
-    return redirect(url_for("productos"))
+    return render_template("productos.html", mappings=mappings, exito="Producto eliminado.")
 
 
 if __name__ == "__main__":
