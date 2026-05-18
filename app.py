@@ -220,8 +220,6 @@ def productos():
 def _detectar_tipo_match(valor: str) -> str:
     if valor.endswith("-"):
         return "codigo_prefijo"
-    if " " in valor:
-        return "nombre"
     return "codigo"
 
 
