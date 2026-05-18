@@ -200,18 +200,11 @@
         <input type="hidden" name="origen" value="productos" />
         <div class="form-grid">
           <div>
-            <label for="tipo_match">Tipo de coincidencia</label>
-            <select id="tipo_match" name="tipo_match">
-              <option value="codigo">Código exacto (ej: AT-L05)</option>
-              <option value="codigo_prefijo">Código empieza con (ej: F7-)</option>
-              <option value="nombre">Nombre contiene (ej: FLORESTA 7)</option>
-            </select>
-          </div>
-          <div>
             <label for="valor_match">Valor a buscar en PIP</label>
-            <input type="text" id="valor_match" name="valor_match" placeholder="Ej: F7-001 o FLORESTA 7" required />
-            <p class="hint">Se convierte a mayúsculas automáticamente.</p>
+            <input type="text" id="valor_match" name="valor_match" placeholder="Ej: AT-L05, F7-, FLORESTA 7" required />
+            <p class="hint">Termina en <strong>-</strong> para prefijo · Con espacios para nombre · Sino, código exacto.</p>
           </div>
+          <div></div>
           <div>
             <label for="codigo_odoo">Código Odoo</label>
             <input type="text" id="codigo_odoo" name="codigo_odoo" placeholder="Ej: flo7" required />
@@ -264,11 +257,6 @@
               <td colspan="5">
                 <form method="POST" action="/productos/editar/{{ m.id }}">
                   <div class="edit-form-grid">
-                    <select name="tipo_match">
-                      <option value="codigo" {% if m.tipo_match == 'codigo' %}selected{% endif %}>Código exacto</option>
-                      <option value="codigo_prefijo" {% if m.tipo_match == 'codigo_prefijo' %}selected{% endif %}>Prefijo código</option>
-                      <option value="nombre" {% if m.tipo_match == 'nombre' %}selected{% endif %}>Nombre contiene</option>
-                    </select>
                     <input type="text" name="valor_match" value="{{ m.valor_match }}" placeholder="Valor PIP" required />
                     <input type="text" name="codigo_odoo" value="{{ m.codigo_odoo }}" placeholder="Código Odoo" required />
                     <input type="text" name="nombre_odoo" value="{{ m.nombre_odoo }}" placeholder="Nombre Odoo" required />

@@ -217,9 +217,16 @@ def productos():
     return render_template("productos.html", mappings=mappings)
 
 
+def _detectar_tipo_match(valor: str) -> str:
+    if valor.endswith("-"):
+        return "codigo_prefijo"
+    if " " in valor:
+        return "nombre"
+    return "codigo"
+
+
 @app.route("/productos/agregar", methods=["POST"])
 def agregar_producto():
-    tipo_match = request.form.get("tipo_match", "codigo")
     valor_match = request.form.get("valor_match", "").strip().upper()
     codigo_odoo = request.form.get("codigo_odoo", "").strip()
     nombre_odoo = request.form.get("nombre_odoo", "").strip()
@@ -228,6 +235,7 @@ def agregar_producto():
         mappings = _leer_mappings()
         return render_template("productos.html", mappings=mappings, error="Todos los campos son obligatorios.")
 
+    tipo_match = _detectar_tipo_match(valor_match)
     mappings = _leer_mappings()
     mappings.append({
         "id": str(uuid.uuid4()),
@@ -237,14 +245,11 @@ def agregar_producto():
         "nombre_odoo": nombre_odoo,
     })
     _guardar_mappings(mappings)
-
-    # Renderizar directamente sin redirect para evitar problemas con free tier
     return render_template("productos.html", mappings=mappings, exito=f"Producto '{nombre_odoo}' agregado correctamente.")
 
 
 @app.route("/productos/editar/<mapping_id>", methods=["POST"])
 def editar_producto(mapping_id):
-    tipo_match = request.form.get("tipo_match", "codigo")
     valor_match = request.form.get("valor_match", "").strip().upper()
     codigo_odoo = request.form.get("codigo_odoo", "").strip()
     nombre_odoo = request.form.get("nombre_odoo", "").strip()
@@ -253,6 +258,7 @@ def editar_producto(mapping_id):
         mappings = _leer_mappings()
         return render_template("productos.html", mappings=mappings, error="Todos los campos son obligatorios.")
 
+    tipo_match = _detectar_tipo_match(valor_match)
     mappings = _leer_mappings()
     for m in mappings:
         if m.get("id") == mapping_id:
