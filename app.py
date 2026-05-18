@@ -242,6 +242,29 @@ def agregar_producto():
     return render_template("productos.html", mappings=mappings, exito=f"Producto '{nombre_odoo}' agregado correctamente.")
 
 
+@app.route("/productos/editar/<mapping_id>", methods=["POST"])
+def editar_producto(mapping_id):
+    tipo_match = request.form.get("tipo_match", "codigo")
+    valor_match = request.form.get("valor_match", "").strip().upper()
+    codigo_odoo = request.form.get("codigo_odoo", "").strip()
+    nombre_odoo = request.form.get("nombre_odoo", "").strip()
+
+    if not valor_match or not codigo_odoo or not nombre_odoo:
+        mappings = _leer_mappings()
+        return render_template("productos.html", mappings=mappings, error="Todos los campos son obligatorios.")
+
+    mappings = _leer_mappings()
+    for m in mappings:
+        if m.get("id") == mapping_id:
+            m["tipo_match"] = tipo_match
+            m["valor_match"] = valor_match
+            m["codigo_odoo"] = codigo_odoo
+            m["nombre_odoo"] = nombre_odoo
+            break
+    _guardar_mappings(mappings)
+    return render_template("productos.html", mappings=mappings, exito=f"Producto '{nombre_odoo}' actualizado correctamente.")
+
+
 @app.route("/productos/eliminar/<mapping_id>", methods=["POST"])
 def eliminar_producto(mapping_id):
     mappings = _leer_mappings()

@@ -106,6 +106,51 @@
       cursor: pointer;
     }
     button.btn-danger:hover { background: #fca5a5; }
+    button.btn-edit {
+      padding: 6px 12px;
+      background: #eff6ff;
+      color: #1d4ed8;
+      font-size: 0.82rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    button.btn-edit:hover { background: #bfdbfe; }
+    button.btn-cancel {
+      padding: 6px 12px;
+      background: var(--input-bg);
+      color: var(--text-sub);
+      font-size: 0.82rem;
+      font-weight: 600;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .edit-row { display: none; background: var(--th-bg); }
+    .edit-row td { padding: 12px; }
+    .edit-form-grid { display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-end; }
+    .edit-form-grid select, .edit-form-grid input[type="text"] {
+      padding: 7px 10px;
+      border: 1.5px solid var(--border);
+      border-radius: 7px;
+      font-size: 0.83rem;
+      background: var(--card);
+      color: var(--text);
+    }
+    .edit-form-grid select { min-width: 180px; }
+    .edit-form-grid input[type="text"] { width: 140px; }
+    .btn-save {
+      padding: 7px 14px;
+      background: #6366f1;
+      color: #fff;
+      font-size: 0.82rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 7px;
+      cursor: pointer;
+    }
+    .btn-save:hover { background: #4f46e5; }
 
     table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
     th { text-align: left; padding: 10px 12px; background: var(--th-bg); color: var(--text-sub); font-size: 0.8rem; font-weight: 600; border-bottom: 1px solid var(--border); }
@@ -195,7 +240,7 @@
           </thead>
           <tbody>
             {% for m in mappings %}
-            <tr>
+            <tr id="row-{{ m.id }}">
               <td>
                 {% if m.tipo_match == 'codigo' %}
                   <span class="badge badge-codigo">Código exacto</span>
@@ -208,9 +253,28 @@
               <td>{{ m.valor_match }}</td>
               <td>{{ m.codigo_odoo }}</td>
               <td>{{ m.nombre_odoo }}</td>
-              <td>
+              <td style="white-space:nowrap; display:flex; gap:6px;">
+                <button type="button" class="btn-edit" onclick="toggleEdit('{{ m.id }}')">Editar</button>
                 <form method="POST" action="/productos/eliminar/{{ m.id }}" onsubmit="return confirm('¿Eliminar este producto?')">
                   <button type="submit" class="btn-danger">Eliminar</button>
+                </form>
+              </td>
+            </tr>
+            <tr class="edit-row" id="edit-{{ m.id }}">
+              <td colspan="5">
+                <form method="POST" action="/productos/editar/{{ m.id }}">
+                  <div class="edit-form-grid">
+                    <select name="tipo_match">
+                      <option value="codigo" {% if m.tipo_match == 'codigo' %}selected{% endif %}>Código exacto</option>
+                      <option value="codigo_prefijo" {% if m.tipo_match == 'codigo_prefijo' %}selected{% endif %}>Prefijo código</option>
+                      <option value="nombre" {% if m.tipo_match == 'nombre' %}selected{% endif %}>Nombre contiene</option>
+                    </select>
+                    <input type="text" name="valor_match" value="{{ m.valor_match }}" placeholder="Valor PIP" required />
+                    <input type="text" name="codigo_odoo" value="{{ m.codigo_odoo }}" placeholder="Código Odoo" required />
+                    <input type="text" name="nombre_odoo" value="{{ m.nombre_odoo }}" placeholder="Nombre Odoo" required />
+                    <button type="submit" class="btn-save">Guardar</button>
+                    <button type="button" class="btn-cancel" onclick="toggleEdit('{{ m.id }}')">Cancelar</button>
+                  </div>
                 </form>
               </td>
             </tr>
@@ -226,6 +290,14 @@
   <footer>Desarrollado por Danilo Sosa | Texo Sistemas</footer>
 
   <script>
+    function toggleEdit(id) {
+      const editRow = document.getElementById("edit-" + id);
+      const isVisible = editRow.style.display === "table-row";
+      // Cerrar todos los demás formularios abiertos
+      document.querySelectorAll(".edit-row").forEach(r => r.style.display = "none");
+      editRow.style.display = isVisible ? "none" : "table-row";
+    }
+
     function toggleTheme() {
       const html = document.documentElement;
       const isDark = html.getAttribute("data-theme") === "dark";
