@@ -1,0 +1,9 @@
+[
+  {
+    "id": "5045ddbf-cd1a-4b03-b211-a95a6283ddd2",
+    "tipo_match": "codigo",
+    "valor_match": "7",
+    "codigo_odoo": "12345",
+    "nombre_odoo": "Alquiler"
+  }
+]

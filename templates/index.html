@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Convertidor PIP → Odoo</title>
+  <style>
+    :root {
+      --bg: #f0f2f5;
+      --card: #ffffff;
+      --text: #1a1a2e;
+      --text-sub: #6b7280;
+      --border: #d1d5db;
+      --input-bg: #fafafa;
+      --btn-secondary-bg: #f3f4f6;
+      --btn-secondary-color: #374151;
+      --btn-secondary-border: #d1d5db;
+      --footer-color: #9ca3af;
+      --shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+    [data-theme="dark"] {
+      --bg: #111827;
+      --card: #1f2937;
+      --text: #f9fafb;
+      --text-sub: #9ca3af;
+      --border: #374151;
+      --input-bg: #374151;
+      --btn-secondary-bg: #374151;
+      --btn-secondary-color: #d1d5db;
+      --btn-secondary-border: #4b5563;
+      --footer-color: #6b7280;
+      --shadow: 0 4px 20px rgba(0,0,0,0.4);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 24px;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      padding: 40px;
+      width: 100%;
+      max-width: 480px;
+      position: relative;
+    }
+
+    h1 { font-size: 1.4rem; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+    .subtitle { color: var(--text-sub); font-size: 0.9rem; margin-bottom: 32px; }
+
+    label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+    .field { margin-bottom: 20px; }
+
+    input[type="file"], select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.9rem;
+      color: var(--text);
+      background: var(--input-bg);
+      transition: border-color 0.2s;
+    }
+    input[type="file"]:focus, select:focus {
+      outline: none; border-color: #6366f1; background: var(--card);
+    }
+
+    .btn-row { display: flex; gap: 10px; margin-top: 8px; }
+
+    button[type="submit"] {
+      flex: 1;
+      padding: 12px;
+      background: #6366f1;
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    button[type="submit"]:hover { background: #4f46e5; }
+
+    .btn-verify {
+      flex: 1;
+      background: var(--btn-secondary-bg) !important;
+      color: var(--btn-secondary-color) !important;
+      border: 1.5px solid var(--btn-secondary-border) !important;
+    }
+
+    .alert {
+      background: #fef2f2;
+      border: 1px solid #fca5a5;
+      color: #b91c1c;
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: 0.88rem;
+      margin-bottom: 16px;
+    }
+
+    /* Theme toggle */
+    .theme-toggle {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: none;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 10px;
+      cursor: pointer;
+      font-size: 1rem;
+      color: var(--text-sub);
+      transition: border-color 0.2s;
+    }
+    .theme-toggle:hover { border-color: #6366f1; }
+
+    /* Footer */
+    footer {
+      margin-top: 24px;
+      font-size: 0.78rem;
+      color: var(--footer-color);
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <button class="theme-toggle" onclick="toggleTheme()" title="Cambiar tema" type="button">🌙</button>
+
+    <h1>Convertidor PIP → Odoo</h1>
+    <p class="subtitle">Subí el Excel exportado del sistema PIP y descargá el archivo listo para importar en Odoo.</p>
+
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        {% for msg in messages %}
+          <div class="alert">{{ msg }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST" action="/convertir" enctype="multipart/form-data" id="form">
+      <div class="field">
+        <label for="archivo_pip">Archivo Excel PIP (.xlsx)</label>
+        <input type="file" id="archivo_pip" name="archivo_pip" accept=".xlsx" required />
+      </div>
+
+      <div class="field">
+        <label for="tipo_impuesto">Tipo de impuesto</label>
+        <select id="tipo_impuesto" name="tipo_impuesto">
+          <option value="10%">Gravado 10%</option>
+          <option value="5%">Gravado 5% + Exento</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="tipo_documento">Tipo de documento</label>
+        <select id="tipo_documento" name="tipo_documento">
+          <option value="factura">Factura</option>
+          <option value="nota_credito">Nota de Crédito</option>
+        </select>
+      </div>
+
+      <div class="btn-row">
+        <button type="submit">Convertir y descargar</button>
+        <button type="submit" formaction="/analizar" class="btn-verify">Verificar productos</button>
+      </div>
+    </form>
+  </div>
+
+  <footer>Desarrollado por Danilo Sosa | Texo Sistemas</footer>
+
+  <script>
+    function toggleTheme() {
+      const html = document.documentElement;
+      const isDark = html.getAttribute("data-theme") === "dark";
+      html.setAttribute("data-theme", isDark ? "light" : "dark");
+      document.querySelector(".theme-toggle").textContent = isDark ? "🌙" : "☀️";
+      localStorage.setItem("theme", isDark ? "light" : "dark");
+    }
+
+    // Restaurar tema guardado
+    const saved = localStorage.getItem("theme");
+    if (saved) {
+      document.documentElement.setAttribute("data-theme", saved);
+      document.querySelector(".theme-toggle").textContent = saved === "dark" ? "☀️" : "🌙";
+    }
+  </script>
+</body>
+</html>

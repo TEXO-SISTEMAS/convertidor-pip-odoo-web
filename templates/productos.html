@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gestión de Productos — Convertidor PIP → Odoo</title>
+  <style>
+    :root {
+      --bg: #f0f2f5;
+      --card: #ffffff;
+      --text: #1a1a2e;
+      --text-sub: #6b7280;
+      --border: #d1d5db;
+      --input-bg: #fafafa;
+      --th-bg: #f9fafb;
+      --row-border: #f3f4f6;
+      --footer-color: #9ca3af;
+      --shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+    [data-theme="dark"] {
+      --bg: #111827;
+      --card: #1f2937;
+      --text: #f9fafb;
+      --text-sub: #9ca3af;
+      --border: #374151;
+      --input-bg: #374151;
+      --th-bg: #273244;
+      --row-border: #374151;
+      --footer-color: #6b7280;
+      --shadow: 0 4px 20px rgba(0,0,0,0.4);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      padding: 32px 24px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      transition: background 0.2s;
+    }
+    .container { max-width: 860px; margin: 0 auto; flex: 1; width: 100%; }
+
+    h1 { font-size: 1.4rem; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+    .subtitle { color: var(--text-sub); font-size: 0.9rem; margin-bottom: 28px; }
+
+    .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    a.back { color: #6366f1; font-size: 0.88rem; text-decoration: none; }
+    a.back:hover { text-decoration: underline; }
+
+    .theme-toggle {
+      background: none;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 10px;
+      cursor: pointer;
+      font-size: 1rem;
+      color: var(--text-sub);
+    }
+    .theme-toggle:hover { border-color: #6366f1; }
+
+    .card {
+      background: var(--card);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      padding: 28px;
+      margin-bottom: 24px;
+    }
+    h2 { font-size: 1rem; font-weight: 700; color: var(--text); margin-bottom: 16px; }
+
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    label { display: block; font-size: 0.82rem; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+    input[type="text"], select {
+      width: 100%;
+      padding: 9px 11px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.88rem;
+      background: var(--input-bg);
+      color: var(--text);
+    }
+    input[type="text"]:focus, select:focus { outline: none; border-color: #6366f1; }
+    .hint { font-size: 0.78rem; color: var(--text-sub); margin-top: 3px; }
+
+    button.btn-primary {
+      padding: 10px 20px;
+      background: #6366f1;
+      color: #fff;
+      font-size: 0.9rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 16px;
+    }
+    button.btn-primary:hover { background: #4f46e5; }
+    button.btn-danger {
+      padding: 6px 12px;
+      background: #fee2e2;
+      color: #b91c1c;
+      font-size: 0.82rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    button.btn-danger:hover { background: #fca5a5; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    th { text-align: left; padding: 10px 12px; background: var(--th-bg); color: var(--text-sub); font-size: 0.8rem; font-weight: 600; border-bottom: 1px solid var(--border); }
+    td { padding: 10px 12px; border-bottom: 1px solid var(--row-border); color: var(--text); }
+    tr:last-child td { border-bottom: none; }
+
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 0.75rem; font-weight: 600; }
+    .badge-codigo { background: #ede9fe; color: #5b21b6; }
+    .badge-nombre { background: #dcfce7; color: #15803d; }
+    .badge-prefijo { background: #fef9c3; color: #92400e; }
+
+    .empty { color: var(--text-sub); font-size: 0.88rem; text-align: center; padding: 24px 0; }
+
+    .alert { background: #f0fdf4; border: 1px solid #86efac; color: #15803d; border-radius: 8px; padding: 10px 14px; font-size: 0.88rem; margin-bottom: 16px; }
+    .alert.error { background: #fef2f2; border-color: #fca5a5; color: #b91c1c; }
+
+    footer { margin-top: 32px; font-size: 0.78rem; color: var(--footer-color); text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="top-bar">
+      <a class="back" href="/">← Volver al convertidor</a>
+      <button class="theme-toggle" onclick="toggleTheme()" type="button">🌙</button>
+    </div>
+
+    <h1>Gestión de Productos</h1>
+    <p class="subtitle">Agregá aquí los productos nuevos que no están en la programación. Se aplican antes que los mapeos fijos.</p>
+
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        {% for msg in messages %}
+          <div class="alert">{{ msg }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <div class="card">
+      <h2>Agregar nuevo producto</h2>
+      <form method="POST" action="/productos/agregar">
+        <input type="hidden" name="origen" value="productos" />
+        <div class="form-grid">
+          <div>
+            <label for="tipo_match">Tipo de coincidencia</label>
+            <select id="tipo_match" name="tipo_match">
+              <option value="codigo">Código exacto (ej: AT-L05)</option>
+              <option value="codigo_prefijo">Código empieza con (ej: F7-)</option>
+              <option value="nombre">Nombre contiene (ej: FLORESTA 7)</option>
+            </select>
+          </div>
+          <div>
+            <label for="valor_match">Valor a buscar en PIP</label>
+            <input type="text" id="valor_match" name="valor_match" placeholder="Ej: F7-001 o FLORESTA 7" required />
+            <p class="hint">Se convierte a mayúsculas automáticamente.</p>
+          </div>
+          <div>
+            <label for="codigo_odoo">Código Odoo</label>
+            <input type="text" id="codigo_odoo" name="codigo_odoo" placeholder="Ej: flo7" required />
+          </div>
+          <div>
+            <label for="nombre_odoo">Nombre Odoo</label>
+            <input type="text" id="nombre_odoo" name="nombre_odoo" placeholder="Ej: Venta Floresta 7" required />
+          </div>
+        </div>
+        <button type="submit" class="btn-primary">Agregar producto</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>Productos personalizados ({{ mappings | length }})</h2>
+      {% if mappings %}
+        <table>
+          <thead>
+            <tr>
+              <th>Tipo</th>
+              <th>Valor PIP</th>
+              <th>Código Odoo</th>
+              <th>Nombre Odoo</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for m in mappings %}
+            <tr>
+              <td>
+                {% if m.tipo_match == 'codigo' %}
+                  <span class="badge badge-codigo">Código exacto</span>
+                {% elif m.tipo_match == 'codigo_prefijo' %}
+                  <span class="badge badge-prefijo">Prefijo código</span>
+                {% else %}
+                  <span class="badge badge-nombre">Nombre contiene</span>
+                {% endif %}
+              </td>
+              <td>{{ m.valor_match }}</td>
+              <td>{{ m.codigo_odoo }}</td>
+              <td>{{ m.nombre_odoo }}</td>
+              <td>
+                <form method="POST" action="/productos/eliminar/{{ m.id }}" onsubmit="return confirm('¿Eliminar este producto?')">
+                  <button type="submit" class="btn-danger">Eliminar</button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p class="empty">No hay productos personalizados todavía. Agregá uno arriba.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <footer>Desarrollado por Danilo Sosa | Texo Sistemas</footer>
+
+  <script>
+    function toggleTheme() {
+      const html = document.documentElement;
+      const isDark = html.getAttribute("data-theme") === "dark";
+      html.setAttribute("data-theme", isDark ? "light" : "dark");
+      document.querySelector(".theme-toggle").textContent = isDark ? "🌙" : "☀️";
+      localStorage.setItem("theme", isDark ? "light" : "dark");
+    }
+    const saved = localStorage.getItem("theme");
+    if (saved) {
+      document.documentElement.setAttribute("data-theme", saved);
+      document.querySelector(".theme-toggle").textContent = saved === "dark" ? "☀️" : "🌙";
+    }
+  </script>
+</body>
+</html>
