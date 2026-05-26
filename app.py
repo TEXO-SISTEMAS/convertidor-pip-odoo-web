@@ -3,6 +3,7 @@ import os
 import json
 import uuid
 import tempfile
+import shutil
 
 # Forzar UTF-8 en stdout para evitar errores con caracteres especiales en Windows
 if hasattr(sys.stdout, "reconfigure"):
@@ -24,7 +25,17 @@ app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "cambiar-en-produccion")
 
 EXTENSIONES_PERMITIDAS = {"xlsx"}
-MAPPINGS_PATH = Path(__file__).parent / "mappings.json"
+# En Vercel el filesystem es read-only salvo /tmp
+_MAPPINGS_REPO = Path(__file__).parent / "mappings.json"
+if os.environ.get("VERCEL"):
+    MAPPINGS_PATH = Path("/tmp/mappings.json")
+    # Copiar mappings del repo a /tmp si no existe todavía
+    if not MAPPINGS_PATH.exists() and _MAPPINGS_REPO.exists():
+        shutil.copy(_MAPPINGS_REPO, MAPPINGS_PATH)
+    elif not MAPPINGS_PATH.exists():
+        MAPPINGS_PATH.write_text("[]", encoding="utf-8")
+else:
+    MAPPINGS_PATH = _MAPPINGS_REPO
 
 # Columnas del Excel PIP que necesitamos para el análisis
 COL_CODIGO = "Código de Producto"
