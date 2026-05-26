@@ -197,18 +197,22 @@ def mapear_producto_odoo(codigo_pip: str, nombre_pip: str) -> tuple[str, str]:
     codigo_upper = (codigo_pip or "").upper().strip()
 
     # GRUPO 1: Floresta X + (CUOTA, ENTREGA INICIAL, PAGO 50%, VALOR DEL TERRENO) o código F<N>- → Ventas Floresta
+    # El prefijo F<N>- NO aplica si el nombre contiene palabras de recupero/servicios
     _kw_floresta = ("CUOTA", "ENTREGA INICIAL", "PAGO 50%", "VALOR DEL TERRENO")
-    if ("FLORESTA 1" in nombre_upper and any(k in nombre_upper for k in _kw_floresta)) or codigo_upper.startswith("F1-"):
+    _kw_rec01 = ("LIMPIEZA", "RECUPERO", "CONSUMO", "RECOLECCION", "RECOLECCIÓN", "BASURA", "GASTOS COMUNES")
+    _es_rec01 = any(k in nombre_upper for k in _kw_rec01)
+
+    if (("FLORESTA 1" in nombre_upper and any(k in nombre_upper for k in _kw_floresta)) or (codigo_upper.startswith("F1-") and not _es_rec01)):
         return ("FLO1", "Venta Floresta 1")
-    elif ("FLORESTA 2" in nombre_upper and any(k in nombre_upper for k in _kw_floresta)) or codigo_upper.startswith("F2-"):
+    elif (("FLORESTA 2" in nombre_upper and any(k in nombre_upper for k in _kw_floresta)) or (codigo_upper.startswith("F2-") and not _es_rec01)):
         return ("flo2", "Venta Floresta 2")
-    elif ("FLORESTA 3" in nombre_upper and any(k in nombre_upper for k in _kw_floresta)) or codigo_upper.startswith("F3-"):
+    elif (("FLORESTA 3" in nombre_upper and any(k in nombre_upper for k in _kw_floresta)) or (codigo_upper.startswith("F3-") and not _es_rec01)):
         return ("flo3", "Venta Floresta 3")
-    elif ("FLORESTA 4" in nombre_upper and any(k in nombre_upper for k in _kw_floresta)) or codigo_upper.startswith("F4-"):
+    elif (("FLORESTA 4" in nombre_upper and any(k in nombre_upper for k in _kw_floresta)) or (codigo_upper.startswith("F4-") and not _es_rec01)):
         return ("flo4", "Venta Floresta 4")
-    elif ("FLORESTA 5" in nombre_upper and any(k in nombre_upper for k in _kw_floresta)) or codigo_upper.startswith("F5-"):
+    elif (("FLORESTA 5" in nombre_upper and any(k in nombre_upper for k in _kw_floresta)) or (codigo_upper.startswith("F5-") and not _es_rec01)):
         return ("flo5", "Venta Floresta 5")
-    elif ("FLORESTA 6" in nombre_upper and any(k in nombre_upper for k in _kw_floresta)) or codigo_upper.startswith("F6-"):
+    elif (("FLORESTA 6" in nombre_upper and any(k in nombre_upper for k in _kw_floresta)) or (codigo_upper.startswith("F6-") and not _es_rec01)):
         return ("flo6", "Venta Floresta 6")
     
     # GRUPO 3: Productos específicos (antes de rec01 para evitar conflictos)
