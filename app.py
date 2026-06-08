@@ -126,11 +126,38 @@ def index():
     return render_template("index.html")
 
 
+def _hacer_conversion(ruta_entrada: str, nombre_original: str, tipo_impuesto: str, tipo_documento: str):
+    """Ejecuta la conversión y retorna send_file o (None, mensaje_error)."""
+    ruta_salida = ruta_entrada.replace(".xlsx", "_odoo.xlsx")
+    convertidor = ConvertidorPipOdoo()
+
+    ok, msg = convertidor.cargar_excel_pip(ruta_entrada)
+    if not ok:
+        return None, f"Error al cargar el archivo: {msg}"
+
+    ok, msg = convertidor.convertir(tipo_impuesto=tipo_impuesto, tipo_documento=tipo_documento)
+    if not ok:
+        return None, f"Error en la conversión: {msg}"
+
+    ok, msg = convertidor.guardar_excel_odoo(ruta_salida)
+    if not ok:
+        return None, f"Error al guardar el resultado: {msg}"
+
+    nombre_descarga = f"odoo_{Path(nombre_original).stem}.xlsx"
+    return send_file(
+        ruta_salida,
+        as_attachment=True,
+        download_name=nombre_descarga,
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    ), None
+
+
 @app.route("/convertir", methods=["POST"])
 def convertir():
     archivo = request.files.get("archivo_pip")
     tipo_impuesto = request.form.get("tipo_impuesto", "10%")
     tipo_documento = request.form.get("tipo_documento", "factura")
+    forzar = request.form.get("forzar", "0") == "1"
 
     if not archivo or archivo.filename == "":
         flash("Seleccioná un archivo Excel (.xlsx) para convertir.")
@@ -144,39 +171,62 @@ def convertir():
         archivo.save(tmp_entrada.name)
         ruta_entrada = tmp_entrada.name
 
-    ruta_salida = ruta_entrada.replace(".xlsx", "_odoo.xlsx")
-
-    try:
-        convertidor = ConvertidorPipOdoo()
-
-        ok, msg = convertidor.cargar_excel_pip(ruta_entrada)
-        if not ok:
-            flash(f"Error al cargar el archivo: {msg}")
+    # Si no se forzó, verificar productos sin mapeo primero
+    if not forzar:
+        no_mapeados, error_formato = _extraer_productos_no_mapeados(ruta_entrada)
+        if error_formato:
+            try: os.unlink(ruta_entrada)
+            except: pass
+            flash(error_formato)
             return redirect(url_for("index"))
 
-        ok, msg = convertidor.convertir(tipo_impuesto=tipo_impuesto, tipo_documento=tipo_documento)
-        if not ok:
-            flash(f"Error en la conversión: {msg}")
-            return redirect(url_for("index"))
+        if no_mapeados:
+            # Guardar archivo temp con ID para usarlo en la confirmación
+            temp_id = str(uuid.uuid4())
+            ruta_guardada = os.path.join(tempfile.gettempdir(), f"{temp_id}.xlsx")
+            shutil.copy(ruta_entrada, ruta_guardada)
+            try: os.unlink(ruta_entrada)
+            except: pass
+            return render_template(
+                "confirmar_conversion.html",
+                no_mapeados=no_mapeados,
+                temp_id=temp_id,
+                nombre_archivo=archivo.filename,
+                tipo_impuesto=tipo_impuesto,
+                tipo_documento=tipo_documento,
+            )
 
-        ok, msg = convertidor.guardar_excel_odoo(ruta_salida)
-        if not ok:
-            flash(f"Error al guardar el resultado: {msg}")
-            return redirect(url_for("index"))
+    # Convertir directo
+    respuesta, error = _hacer_conversion(ruta_entrada, archivo.filename, tipo_impuesto, tipo_documento)
+    try: os.unlink(ruta_entrada)
+    except: pass
 
-        nombre_descarga = f"odoo_{Path(archivo.filename).stem}.xlsx"
-        return send_file(
-            ruta_salida,
-            as_attachment=True,
-            download_name=nombre_descarga,
-            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        )
+    if error:
+        flash(error)
+        return redirect(url_for("index"))
+    return respuesta
 
-    finally:
-        try:
-            os.unlink(ruta_entrada)
-        except Exception:
-            pass
+
+@app.route("/convertir-confirmar", methods=["POST"])
+def convertir_confirmar():
+    temp_id = request.form.get("temp_id", "")
+    tipo_impuesto = request.form.get("tipo_impuesto", "10%")
+    tipo_documento = request.form.get("tipo_documento", "factura")
+    nombre_archivo = request.form.get("nombre_archivo", "archivo.xlsx")
+
+    ruta_entrada = os.path.join(tempfile.gettempdir(), f"{temp_id}.xlsx")
+    if not os.path.exists(ruta_entrada):
+        flash("El archivo expiró. Por favor subí el archivo nuevamente.")
+        return redirect(url_for("index"))
+
+    respuesta, error = _hacer_conversion(ruta_entrada, nombre_archivo, tipo_impuesto, tipo_documento)
+    try: os.unlink(ruta_entrada)
+    except: pass
+
+    if error:
+        flash(error)
+        return redirect(url_for("index"))
+    return respuesta
 
 
 @app.route("/analizar", methods=["POST"])

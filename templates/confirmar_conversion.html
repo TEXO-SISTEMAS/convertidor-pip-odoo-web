@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Productos sin mapeo — Convertidor PIP → Odoo</title>
+  <style>
+    :root {
+      --bg: #f0f2f5; --card: #ffffff; --text: #1a1a2e; --text-sub: #6b7280;
+      --border: #d1d5db; --input-bg: #fafafa; --th-bg: #f9fafb;
+      --row-border: #f3f4f6; --footer-color: #9ca3af; --shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+    [data-theme="dark"] {
+      --bg: #111827; --card: #1f2937; --text: #f9fafb; --text-sub: #9ca3af;
+      --border: #374151; --input-bg: #374151; --th-bg: #273244;
+      --row-border: #374151; --footer-color: #6b7280; --shadow: 0 4px 20px rgba(0,0,0,0.4);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg); padding: 32px 24px; min-height: 100vh;
+      display: flex; flex-direction: column; transition: background 0.2s;
+    }
+    .container { max-width: 860px; margin: 0 auto; flex: 1; width: 100%; }
+    h1 { font-size: 1.4rem; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+    .subtitle { color: var(--text-sub); font-size: 0.9rem; margin-bottom: 28px; }
+    .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    a.back { color: #6366f1; font-size: 0.88rem; text-decoration: none; }
+    a.back:hover { text-decoration: underline; }
+    .theme-toggle {
+      background: none; border: 1.5px solid var(--border); border-radius: 8px;
+      padding: 6px 10px; cursor: pointer; font-size: 1rem; color: var(--text-sub);
+    }
+    .theme-toggle:hover { border-color: #6366f1; }
+    .card {
+      background: var(--card); border-radius: 12px; box-shadow: var(--shadow);
+      padding: 28px; margin-bottom: 24px;
+    }
+    h2 { font-size: 1rem; font-weight: 700; color: var(--text); margin-bottom: 16px; }
+    .warn-banner {
+      background: #fffbeb; border: 1px solid #fcd34d; color: #92400e;
+      border-radius: 10px; padding: 16px 20px; margin-bottom: 24px; font-size: 0.88rem;
+    }
+    .warn-banner strong { display: block; font-size: 0.95rem; margin-bottom: 4px; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    th { text-align: left; padding: 10px 12px; background: var(--th-bg); color: var(--text-sub); font-size: 0.8rem; font-weight: 600; border-bottom: 1px solid var(--border); }
+    td { padding: 10px 12px; border-bottom: 1px solid var(--row-border); color: var(--text); vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    .pip-code { font-family: monospace; font-size: 0.82rem; color: var(--text-sub); }
+    .form-inline { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .form-inline input[type="text"] {
+      padding: 7px 10px; border: 1.5px solid var(--border); border-radius: 7px;
+      font-size: 0.83rem; background: var(--input-bg); color: var(--text); width: 140px;
+    }
+    .form-inline input[type="text"]:focus { outline: none; border-color: #6366f1; }
+    button.btn-sm {
+      padding: 7px 14px; background: #6366f1; color: #fff; font-size: 0.82rem;
+      font-weight: 600; border: none; border-radius: 7px; cursor: pointer;
+    }
+    button.btn-sm:hover { background: #4f46e5; }
+    .actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px; }
+    .btn-primary {
+      padding: 11px 22px; background: #6366f1; color: #fff; font-size: 0.9rem;
+      font-weight: 600; border: none; border-radius: 8px; cursor: pointer;
+      text-decoration: none; display: inline-block;
+    }
+    .btn-primary:hover { background: #4f46e5; }
+    .btn-warning {
+      padding: 11px 22px; background: #fffbeb; color: #92400e; font-size: 0.9rem;
+      font-weight: 600; border: 1.5px solid #fcd34d; border-radius: 8px; cursor: pointer;
+      text-decoration: none; display: inline-block;
+    }
+    .btn-warning:hover { background: #fef9c3; }
+    .btn-secondary {
+      padding: 11px 22px; background: var(--input-bg); color: var(--text);
+      font-size: 0.9rem; font-weight: 600; border: 1.5px solid var(--border);
+      border-radius: 8px; text-decoration: none; display: inline-block;
+    }
+    .alert { background: #f0fdf4; border: 1px solid #86efac; color: #15803d; border-radius: 8px; padding: 10px 14px; font-size: 0.88rem; margin-bottom: 16px; }
+    footer { margin-top: 32px; font-size: 0.78rem; color: var(--footer-color); text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="top-bar">
+      <a class="back" href="/">← Volver al convertidor</a>
+      <button class="theme-toggle" onclick="toggleTheme()" type="button">🌙</button>
+    </div>
+
+    <h1>Productos sin mapeo detectados</h1>
+    <p class="subtitle">Archivo: <strong>{{ nombre_archivo }}</strong></p>
+
+    <div class="warn-banner">
+      <strong>{{ no_mapeados | length }} producto(s) sin mapeo</strong>
+      Estos productos se exportarán con el código y nombre original del PIP.
+      Podés mapearlos ahora o continuar de todas formas.
+    </div>
+
+    <div class="card">
+      <h2>Productos sin mapeo</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Código PIP</th>
+            <th>Nombre PIP</th>
+            <th>Mapear como (opcional)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in no_mapeados %}
+          <tr>
+            <td class="pip-code">{{ p.codigo_pip }}</td>
+            <td>{{ p.nombre_pip }}</td>
+            <td>
+              <form method="POST" action="/productos/agregar">
+                <input type="hidden" name="origen" value="analizar" />
+                <input type="hidden" name="tipo_match" value="codigo" />
+                <input type="hidden" name="valor_match" value="{{ p.codigo_pip }}" />
+                <div class="form-inline">
+                  <input type="text" name="codigo_odoo" placeholder="Código Odoo" required />
+                  <input type="text" name="nombre_odoo" placeholder="Nombre Odoo" required />
+                  <button type="submit" class="btn-sm">Guardar</button>
+                </div>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="actions">
+      <!-- Convertir de todas formas con el archivo ya guardado en temp -->
+      <form method="POST" action="/convertir-confirmar">
+        <input type="hidden" name="temp_id" value="{{ temp_id }}" />
+        <input type="hidden" name="tipo_impuesto" value="{{ tipo_impuesto }}" />
+        <input type="hidden" name="tipo_documento" value="{{ tipo_documento }}" />
+        <input type="hidden" name="nombre_archivo" value="{{ nombre_archivo }}" />
+        <button type="submit" class="btn-warning">Convertir de todas formas</button>
+      </form>
+      <a href="/" class="btn-secondary">Cancelar</a>
+    </div>
+  </div>
+
+  <footer>Desarrollado por Danilo Sosa | Texo Sistemas</footer>
+
+  <script>
+    function toggleTheme() {
+      const html = document.documentElement;
+      const isDark = html.getAttribute("data-theme") === "dark";
+      html.setAttribute("data-theme", isDark ? "light" : "dark");
+      document.querySelector(".theme-toggle").textContent = isDark ? "🌙" : "☀️";
+      localStorage.setItem("theme", isDark ? "light" : "dark");
+    }
+    const saved = localStorage.getItem("theme");
+    if (saved) {
+      document.documentElement.setAttribute("data-theme", saved);
+      document.querySelector(".theme-toggle").textContent = saved === "dark" ? "☀️" : "🌙";
+    }
+  </script>
+</body>
+</html>
