@@ -97,6 +97,14 @@
       background: var(--btn-secondary-bg) !important;
       color: var(--btn-secondary-color) !important;
       border: 1.5px solid var(--btn-secondary-border) !important;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
     }
 
     .alert {
@@ -173,7 +181,7 @@
 
       <div class="btn-row">
         <button type="submit">Convertir y descargar</button>
-        <button type="submit" formaction="/analizar" class="btn-verify">Verificar productos</button>
+        <a href="/productos" class="btn-verify">Gestionar productos</a>
       </div>
     </form>
   </div>
