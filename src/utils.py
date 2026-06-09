@@ -8,15 +8,27 @@ from datetime import datetime, timedelta
 
 
 def _cargar_mappings_custom() -> list[dict]:
-    """Carga los mapeos personalizados desde mappings.json."""
-    ruta = Path(__file__).parent.parent / "mappings.json"
-    if not ruta.exists():
-        return []
-    try:
-        with open(ruta, encoding="utf-8") as f:
-            return json.load(f)
-    except Exception:
-        return []
+    """
+    Carga los mapeos personalizados desde mappings.json.
+    En Vercel el archivo se copia a /tmp/mappings.json al iniciar app.py,
+    por eso buscamos primero en /tmp (Vercel) y después en la ruta del repo.
+    """
+    import os
+    candidatas = []
+    # Vercel: /tmp/mappings.json (donde app.py guarda los cambios)
+    if os.environ.get("VERCEL"):
+        candidatas.append(Path("/tmp/mappings.json"))
+    # Ruta normal: junto al raíz del repo
+    candidatas.append(Path(__file__).parent.parent / "mappings.json")
+
+    for ruta in candidatas:
+        if ruta.exists():
+            try:
+                with open(ruta, encoding="utf-8") as f:
+                    return json.load(f)
+            except Exception:
+                continue
+    return []
 
 
 def _aplicar_mapping_custom(codigo_pip: str, nombre_pip: str) -> tuple[str, str] | None:
