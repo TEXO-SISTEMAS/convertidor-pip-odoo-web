@@ -4,6 +4,9 @@ import json
 import uuid
 import tempfile
 import shutil
+import base64
+import urllib.request
+import urllib.error
 
 # Forzar UTF-8 en stdout para evitar errores con caracteres especiales en Windows
 if hasattr(sys.stdout, "reconfigure"):
@@ -57,6 +60,40 @@ def _leer_mappings() -> list[dict]:
 def _guardar_mappings(mappings: list[dict]):
     with open(MAPPINGS_PATH, "w", encoding="utf-8") as f:
         json.dump(mappings, f, ensure_ascii=False, indent=2)
+    _sync_github(mappings)
+
+
+def _sync_github(mappings: list[dict]):
+    """Persiste mappings.json en GitHub para que sobreviva los redeploys de Render."""
+    token = os.environ.get("GITHUB_TOKEN")
+    if not token:
+        return
+    repo = "TEXO-SISTEMAS/convertidor-pip-odoo-web"
+    api_url = f"https://api.github.com/repos/{repo}/contents/mappings.json"
+    headers = {
+        "Authorization": f"token {token}",
+        "Accept": "application/vnd.github.v3+json",
+        "Content-Type": "application/json",
+    }
+    contenido = json.dumps(mappings, ensure_ascii=False, indent=2)
+    contenido_b64 = base64.b64encode(contenido.encode("utf-8")).decode("utf-8")
+    try:
+        # Obtener SHA actual del archivo
+        req = urllib.request.Request(api_url, headers=headers)
+        with urllib.request.urlopen(req) as resp:
+            sha = json.loads(resp.read())["sha"]
+    except Exception:
+        sha = None
+    data = json.dumps({
+        "message": "Update mappings.json via web UI",
+        "content": contenido_b64,
+        **({"sha": sha} if sha else {}),
+    }).encode("utf-8")
+    try:
+        req = urllib.request.Request(api_url, data=data, headers=headers, method="PUT")
+        urllib.request.urlopen(req)
+    except Exception as e:
+        print(f"[WARNING] No se pudo sincronizar mappings.json con GitHub: {e}")
 
 
 def _extraer_productos_no_mapeados(ruta_archivo: str) -> tuple[list[dict], str | None]:
