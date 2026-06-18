@@ -31,6 +31,32 @@ def _cargar_mappings_custom() -> list[dict]:
     return []
 
 
+def obtener_impuesto_custom(codigo_pip: str, nombre_pip: str) -> str | None:
+    """
+    Devuelve el tipo_impuesto definido en el mapping custom para este producto,
+    o None si no tiene override (se debe usar el global de la conversión).
+    """
+    nombre_upper = (nombre_pip or "").upper().strip()
+    codigo_upper = (codigo_pip or "").upper().strip()
+
+    for m in _cargar_mappings_custom():
+        tipo = m.get("tipo_match", "")
+        valor = (m.get("valor_match") or "").upper().strip()
+        ti = m.get("tipo_impuesto", "")
+
+        matched = False
+        if tipo == "codigo" and valor and codigo_upper == valor:
+            matched = True
+        elif tipo == "codigo_prefijo" and valor and codigo_upper.startswith(valor):
+            matched = True
+        elif tipo == "nombre" and valor and valor in nombre_upper:
+            matched = True
+
+        if matched and ti:
+            return ti
+    return None
+
+
 def _aplicar_mapping_custom(codigo_pip: str, nombre_pip: str) -> tuple[str, str] | None:
     """
     Busca si el producto coincide con algún mapeo personalizado.

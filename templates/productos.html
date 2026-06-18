@@ -161,6 +161,9 @@
     .badge-codigo { background: #ede9fe; color: #5b21b6; }
     .badge-nombre { background: #dcfce7; color: #15803d; }
     .badge-prefijo { background: #fef9c3; color: #92400e; }
+    .badge-imp10 { background: #dbeafe; color: #1d4ed8; }
+    .badge-imp5 { background: #d1fae5; color: #065f46; }
+    .badge-impglobal { background: #f3f4f6; color: #6b7280; }
 
     .empty { color: var(--text-sub); font-size: 0.88rem; text-align: center; padding: 24px 0; }
 
@@ -213,6 +216,15 @@
             <label for="nombre_odoo">Nombre Odoo</label>
             <input type="text" id="nombre_odoo" name="nombre_odoo" placeholder="Ej: Venta Floresta 7" required />
           </div>
+          <div>
+            <label for="tipo_impuesto_mapping">Tipo de impuesto</label>
+            <select id="tipo_impuesto_mapping" name="tipo_impuesto_mapping">
+              <option value="">Global (usar el de la conversión)</option>
+              <option value="10%">Gravado 10%</option>
+              <option value="5%">Gravado 5% + Exento</option>
+            </select>
+          </div>
+          <div></div>
         </div>
         <button type="submit" class="btn-primary">Agregar producto</button>
       </form>
@@ -228,6 +240,7 @@
               <th>Valor PIP</th>
               <th>Código Odoo</th>
               <th>Nombre Odoo</th>
+              <th>Impuesto</th>
               <th></th>
             </tr>
           </thead>
@@ -246,6 +259,15 @@
               <td>{{ m.valor_match }}</td>
               <td>{{ m.codigo_odoo }}</td>
               <td>{{ m.nombre_odoo }}</td>
+              <td>
+                {% if m.tipo_impuesto == '10%' %}
+                  <span class="badge badge-imp10">10%</span>
+                {% elif m.tipo_impuesto == '5%' %}
+                  <span class="badge badge-imp5">5% + Exento</span>
+                {% else %}
+                  <span class="badge badge-impglobal">Global</span>
+                {% endif %}
+              </td>
               <td style="white-space:nowrap; display:flex; gap:6px;">
                 <button type="button" class="btn-edit" onclick="toggleEdit('{{ m.id }}')">Editar</button>
                 <form method="POST" action="/productos/eliminar/{{ m.id }}" onsubmit="return confirm('¿Eliminar este producto?')">
@@ -260,6 +282,11 @@
                     <input type="text" name="valor_match" value="{{ m.valor_match }}" placeholder="Valor PIP" required />
                     <input type="text" name="codigo_odoo" value="{{ m.codigo_odoo }}" placeholder="Código Odoo" required />
                     <input type="text" name="nombre_odoo" value="{{ m.nombre_odoo }}" placeholder="Nombre Odoo" required />
+                    <select name="tipo_impuesto_mapping">
+                      <option value="" {% if not m.tipo_impuesto %}selected{% endif %}>Global</option>
+                      <option value="10%" {% if m.tipo_impuesto == '10%' %}selected{% endif %}>10%</option>
+                      <option value="5%" {% if m.tipo_impuesto == '5%' %}selected{% endif %}>5% + Exento</option>
+                    </select>
                     <button type="submit" class="btn-save">Guardar</button>
                     <button type="button" class="btn-cancel" onclick="toggleEdit('{{ m.id }}')">Cancelar</button>
                   </div>
