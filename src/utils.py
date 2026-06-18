@@ -233,7 +233,7 @@ def mapear_producto_odoo(codigo_pip: str, nombre_pip: str) -> tuple[str, str]:
         return ("venter", "Ventas Terport")
     
     # Intereses
-    if "INTERESES" in nombre_upper or "1-INT" in codigo_upper:
+    if "INTERESES" in nombre_upper or "INTERÉS" in nombre_upper or "INTERES" in nombre_upper or "1-INT" in codigo_upper:
         return ("inte01", "Intereses")
     
     # GRUPO 2: Recupero de Servicios Básicos
