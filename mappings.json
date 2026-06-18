@@ -5,5 +5,19 @@
     "valor_match": "7",
     "codigo_odoo": "ALPI01",
     "nombre_odoo": "Alquiler"
+  },
+  {
+    "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "tipo_match": "codigo",
+    "valor_match": "PIP-M10-L2",
+    "codigo_odoo": "Ventaex",
+    "nombre_odoo": "Venta Inmueble Ex"
+  },
+  {
+    "id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+    "tipo_match": "codigo",
+    "valor_match": "PIP-M10-L2",
+    "codigo_odoo": "Veninm",
+    "nombre_odoo": "Venta de Inmuebles"
   }
 ]
