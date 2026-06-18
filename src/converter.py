@@ -12,7 +12,6 @@ from utils import (
     extraer_partes_numero_factura,
     calcular_terminos_pago,
     mapear_producto_odoo,
-    obtener_impuesto_custom,
 )
 
 # Nombre exacto de la hoja en el Excel PIP
@@ -525,10 +524,6 @@ class ConvertidorPipOdoo:
         codigo_pip_str = str(codigo_producto) if codigo_producto else ""
         nombre_pip_str_map = str(nombre_producto) if nombre_producto else ""
         codigo_odoo, etiqueta_odoo = mapear_producto_odoo(codigo_pip_str, nombre_pip_str_map)
-
-        # Override de impuesto por producto (definido en mappings custom)
-        impuesto_override = obtener_impuesto_custom(codigo_pip_str, nombre_pip_str_map)
-        tipo_impuesto_efectivo = impuesto_override if impuesto_override else tipo_impuesto
         
         if tipo_documento == "nota_credito":
             tipo_comprobante = "Nota de Crédito"
@@ -567,9 +562,9 @@ class ConvertidorPipOdoo:
         if exento or gravado_5 or gravado_10:
             print(f"[DEBUG] Fila {num_fila}: Exento={exento}, Gravado5%={gravado_5}, Gravado10%={gravado_10}")
 
-        if tipo_impuesto_efectivo == "5%":
+        if tipo_impuesto == "5%":
             print(f"[INFO] Fila {num_fila}: tipo_impuesto=5% → generando 2 líneas (Gravado 5% + Exenta)")
-            nombre_pip_str = nombre_pip_str_map
+            nombre_pip_str = str(nombre_producto) if nombre_producto else ""
 
             _mapa_exento = {
                 "flo1":   "FLO1EX",

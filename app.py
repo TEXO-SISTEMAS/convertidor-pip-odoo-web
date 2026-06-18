@@ -294,19 +294,15 @@ def agregar_producto():
         mappings = _leer_mappings()
         return render_template("productos.html", mappings=mappings, error="Todos los campos son obligatorios.")
 
-    tipo_impuesto_mapping = request.form.get("tipo_impuesto_mapping", "")
     tipo_match = _detectar_tipo_match(valor_match)
     mappings = _leer_mappings()
-    entry = {
+    mappings.append({
         "id": str(uuid.uuid4()),
         "tipo_match": tipo_match,
         "valor_match": valor_match,
         "codigo_odoo": codigo_odoo,
         "nombre_odoo": nombre_odoo,
-    }
-    if tipo_impuesto_mapping:
-        entry["tipo_impuesto"] = tipo_impuesto_mapping
-    mappings.append(entry)
+    })
     _guardar_mappings(mappings)
     return render_template("productos.html", mappings=mappings, exito=f"Producto '{nombre_odoo}' agregado correctamente.")
 
@@ -321,7 +317,6 @@ def editar_producto(mapping_id):
         mappings = _leer_mappings()
         return render_template("productos.html", mappings=mappings, error="Todos los campos son obligatorios.")
 
-    tipo_impuesto_mapping = request.form.get("tipo_impuesto_mapping", "")
     tipo_match = _detectar_tipo_match(valor_match)
     mappings = _leer_mappings()
     for m in mappings:
@@ -330,10 +325,6 @@ def editar_producto(mapping_id):
             m["valor_match"] = valor_match
             m["codigo_odoo"] = codigo_odoo
             m["nombre_odoo"] = nombre_odoo
-            if tipo_impuesto_mapping:
-                m["tipo_impuesto"] = tipo_impuesto_mapping
-            else:
-                m.pop("tipo_impuesto", None)
             break
     _guardar_mappings(mappings)
     return render_template("productos.html", mappings=mappings, exito=f"Producto '{nombre_odoo}' actualizado correctamente.")
