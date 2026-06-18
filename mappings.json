@@ -19,12 +19,5 @@
     "valor_match": "PIP-M10-L2",
     "codigo_odoo": "Veninm",
     "nombre_odoo": "Venta de Inmuebles"
-  },
-  {
-    "id": "78e6b5bd-5ce3-4f20-b7f9-9f0633d56cf2",
-    "tipo_match": "codigo",
-    "valor_match": "TEST",
-    "codigo_odoo": "nuevoprueba1",
-    "nombre_odoo": "pruebaregistro"
   }
 ]
